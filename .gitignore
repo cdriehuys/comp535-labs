@@ -1,0 +1,6 @@
+# LaTeX generated files from write-ups
+*.aux
+*.log
+*.pdf
+*.synctex.gz
+
