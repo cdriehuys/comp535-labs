@@ -1,0 +1,59 @@
+--- unsafe_home.php	2019-02-12 21:40:26.892434981 -0500
++++ safe_home.php	2019-02-12 21:32:27.771606374 -0500
+@@ -15,6 +15,8 @@
+ 
+ NOTE: please note that the navbar items should appear only for users and the page with error login message should not have any of these items at
+ all. Therefore the navbar tag starts before the php tag but it end within the php script adding items as required.
++
++Update 2019-02-12: Use prepared statements to avoid SQL injection vulnerabilities.
+ -->
+ 
+ <!DOCTYPE html>
+@@ -70,36 +72,17 @@
+       // create a connection
+       $conn = getDB();
+       // Sql query to authenticate the user
+-      $sql = "SELECT id, name, eid, salary, birth, ssn, phoneNumber, address, email,nickname,Password
+-      FROM credential
+-      WHERE name= '$input_uname' and Password='$hashed_pwd'";
+-      if (!$result = $conn->query($sql)) {
+-        echo "</div>";
+-        echo "</nav>";
+-        echo "<div class='container text-center'>";
+-        die('There was an error running the query [' . $conn->error . ']\n');
+-        echo "</div>";
+-      }
+-      /* convert the select return result into array type */
+-      $return_arr = array();
+-      while($row = $result->fetch_assoc()){
+-        array_push($return_arr,$row);
+-      }
+-
+-      /* convert the array type to json format and read out*/
+-      $json_str = json_encode($return_arr);
+-      $json_a = json_decode($json_str,true);
+-      $id = $json_a[0]['id'];
+-      $name = $json_a[0]['name'];
+-      $eid = $json_a[0]['eid'];
+-      $salary = $json_a[0]['salary'];
+-      $birth = $json_a[0]['birth'];
+-      $ssn = $json_a[0]['ssn'];
+-      $phoneNumber = $json_a[0]['phoneNumber'];
+-      $address = $json_a[0]['address'];
+-      $email = $json_a[0]['email'];
+-      $pwd = $json_a[0]['Password'];
+-      $nickname = $json_a[0]['nickname'];
++      $profile_stmt = $conn->prepare(
++        "SELECT id, name, eid, salary, birth, ssn, phoneNumber, address, email,nickname,Password
++        FROM credential
++        WHERE name = ? AND Password = ?"
++      );
++      $profile_stmt->bind_param("ss", $input_uname, $hashed_pwd);
++      $profile_stmt->execute();
++      $profile_stmt->bind_result($id, $name, $eid, $salary, $birth, $ssn, $phoneNumber, $address, $email, $nickname, $pwd);
++      $profile_stmt->fetch();
++      $profile_stmt->close();
++      
+       if($id!=""){
+         // If id exists that means user exists and is successfully authenticated
+         drawLayout($id,$name,$eid,$salary,$birth,$ssn,$pwd,$nickname,$email,$address,$phoneNumber);
