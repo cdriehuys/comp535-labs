@@ -1,0 +1,229 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage[left=0.79in, right=0.79in, top=0.79in, bottom=0.79in]{geometry}
+\usepackage{listings}
+\usepackage[svgnames]{xcolor}
+\author{Chathan Driehuys}
+
+\definecolor{diffstart}{named}{Grey}
+\definecolor{diffincl}{named}{Green}
+\definecolor{diffrem}{named}{OrangeRed}
+
+\lstdefinelanguage{diff}{
+	basicstyle=\ttfamily\small,
+	morecomment=[f][\color{diffstart}]{@@},
+	morecomment=[f][\color{diffincl}]{+},
+	morecomment=[f][\color{diffrem}]{-},
+}
+
+\lstset{frame=tb,
+	language=html,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=2
+}
+
+\graphicspath{{./images/}}
+
+\pagestyle{fancy}
+\lhead{COMP 535}
+\chead{Crypto PKI}
+\rhead{Chathan Driehuys}
+
+\begin{document}
+	\noindent \textbf{UNC Honor Pledge:} I certify that no unauthorized assistance has been received or given in the completion of this work.
+	
+	\vspace{.5in}
+	
+	\section*{Task 1}
+		Following the instructions from the lab, we generated a root certificate for our demo certificate authority.
+	
+		\begin{figure}[h!]
+			\begin{center}
+				\includegraphics[width=2.25in]{task-1-files}
+			\end{center}
+			\caption{The file structure for our demo CA.}
+		\end{figure}
+	
+	\section*{Task 2}
+		\subsection*{Step 1}
+			Our first step is to generate a private key for the company that wishes to obtain a certificate from our CA. An example key looks like:
+			
+			\begin{verbatim}
+				-----BEGIN RSA PRIVATE KEY-----
+				Proc-Type: 4,ENCRYPTED
+				DEK-Info: AES-128-CBC,88DCBDA14CE9BA376947619DDFE5108D
+				
+				0XOSPe0ui69NowRhNYg2cXPMnhInAmdcV16KrZ9Ja26Ar0rcSb7i6lxCJk8VxNd3
+				KIxJDp+nfawqsof6qfKv9lEmU8t7mi0a12q6aZaFztQOAp+bBbsGxPoWT7Ay1NXp
+				jsgdfMm8HK0M72nkFSB0c4PPJx8N9sitCGOYkQDP528NCs8p39t5R9uzdNKt0S1I
+				VxmJCHtSNilQJkZqvDGpJcqLFH/MOkmJiaVIy4Mg1M/oU3Dgy0DP7gVAbHajKuWC
+				/mzgqH6wqNExVCbRwYCZGW8RONPlkOVbxZ36oAwXhGeARw6YnMWn2+sKly03BDhy
+				ibJ6iEaHSEXjDB6HP4RD2jWUxyWz+PM19XXqUsI0e6l57Jn9rdeVpKcGedG1WJpd
+				6A0We/5M5m4SmMuLSw7hLTuo1YZI4vMPV1rxNmasqU2/VRGfC3+/YvCgO38jeGuS
+				Y/Zcr+qDHuab7ckHJLuy89pi4jYOc353iT0/86QcCw/aC6Q9CCv7XsZHzQ2CoN7o
+				Kla/kyevdH+i/w3rtImoXfIA9HPyp1WeK/7hnFjfdYeE166ow2Nj92S000CT0+cH
+				wtcbDM7e1E8j68/g+VQ+jzq2ojoM+Y//5w1XfOTtld5mL9dNFPmy5X/JcGHlbZ3Q
+				ombxpwPs4QjhY/3WPn2yNSDDShrcb++zkgEXALK1zzas4U2OjffFfEIpAqt/Y/12
+				Ve2grRfGpI6XLHTBlx4yFx9IKpmd9hfY1ben9inlvIlSAErLUBjs4z3044m+/I8f
+				mLVsHwVMgRTTSSqpYcljhX2dHml4f+UUEnp5Xc9WLBZ7sQtdRbA/b1YkUw4PnVz+
+				-----END RSA PRIVATE KEY-----
+			\end{verbatim}
+			
+		\subsection*{Step 2}
+			Now we can generate a Certificate Signing Request using the private key we just generated.
+			
+			\begin{verbatim}
+				-----BEGIN CERTIFICATE REQUEST-----
+				MIIBnDCCAQUCAQAwXDELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAk5DMRQwEgYDVQQH
+				DAtDaGFwZWwgSGlsbDENMAsGA1UECgwEU2VlZDEbMBkGA1UEAwwSU0VFRFBLSUxh
+				YjIwMTguY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCz07IifxXrZ6dN
+				0pJRNpxrECMH6KGvO0WriTJm77YLVHxWFXXgF1ROYWDf+Z0ToSfESI5q8boBTsmy
+				/zJfQopL2QC4jgpsvUMaCG5skNcxwegvPFA3vltCK6vqfEGmV8PJ7qwroE4B2TVK
+				in5KHzWBeI9sgOQ0uQ03MqFb/fuzMwIDAQABoAAwDQYJKoZIhvcNAQELBQADgYEA
+				jt9wFnyYmo0gf58Fcef2apOXO8BWJ+2CXuLDt9TuybMTxzl7XH/I+mBP773GoI0q
+				LdNZEnukhbfXJuZhUsbIvcpn57ly/Ln/o41PqMz/o+wxloDC1w2X1sqTpQZPkLwf
+				T1NkPFEumz3rjv9aIrSefxwWfbaGinQi/C2OM+JF+0Q=
+				-----END CERTIFICATE REQUEST-----
+			\end{verbatim}
+	
+		\subsection*{Step 3}
+			We can then sign the CSR from the previous step using our CA's root certificate. After we run the appropriate \texttt{openssl} command, we can see that the directory structure now has additional files. In particular, there is a new \texttt{server.crt} file containing a certificate signed by the CA that can be used for SSL.
+			
+			\begin{figure}[h!]
+				\begin{center}
+					\includegraphics[width=2.25in]{task-2-3-files}
+				\end{center}
+				\caption{The file structure for our demo CA after signing a CSR for \texttt{SEEDPKILab2018.com}.}
+			\end{figure}
+		
+	\section*{Task 3}
+		\subsection*{Step 1}
+			We begin by configuring our VM to redirect traffic going to \texttt{SEEDPKILab2018.com} to the VM itself by inserting the following line into \texttt{/etc/hosts}.
+			
+			\begin{verbatim}
+				127.0.0.1       SEEDPKILab2018.com
+			\end{verbatim}
+		
+		\subsection*{Step 2}
+			After combining \texttt{server.key} and \texttt{server.crt} into \texttt{server.pem} and using \texttt{openssl s\_server} to start a server, we do indeed get a warning from Firefox stating that the connection is not secure.
+			
+			\begin{figure}[h!]
+				\begin{center}
+					\includegraphics[height=3in]{task-3-2-untrusted}
+				\end{center}
+				\caption{Error message from Firefox since our CA is untrusted.}
+			\end{figure}
+		
+		\subsection*{Step 3}
+			To fix the error displayed by Firefox, we can import the \texttt{ca.crt} file generated in the first task as a trusted CA into Firefox. Once that is completed, we see a proper response when navigating to the page.
+			
+			\begin{figure}[h!]
+				\includegraphics[width=\linewidth]{task-3-3-response}
+				\caption{Example response once Firefox trusts our CA.}
+			\end{figure}
+		
+		\pagebreak
+		
+		\subsection*{Step 4}
+			Now that we have a working SSL certificate, we can break it. For example, modifying \texttt{server.pem} means that the file is no longer what was signed by the CA. As a result, Firefox throws an error.
+			
+			\begin{figure}[h!]
+				\includegraphics[width=\linewidth]{task-3-4-modified}
+				\caption{The error message Firefox displays if we modify \texttt{server.pem}.}
+			\end{figure}
+		
+			Since we directed traffic to \texttt{SEEDPKILab2018.com} to our local machine, we should be able to access it using \texttt{localhost} instead. However this does not work because the certificate specifies the URL of the site (\texttt{Common Name} when creating the certificate).
+			
+			\begin{figure}[h!]
+				\includegraphics[width=\linewidth]{task-3-4-localhost}
+				\caption{The error message Firefox displays if we attempt to access the site through \texttt{localhost}.}
+			\end{figure}
+		
+	\section*{Task 4}
+		Utilizing the certificates we generated in task 2, we can configure Apache to serve a website over HTTPS. After enabling Apache's SSL module and restarting the service, we can now access the site.
+		
+		\textit{Note that the default Apache page is displayed because that's the content we pointed to. We could serve any real content by manipulating the contents of \texttt{/var/www/html}.}
+		
+		\begin{figure}[h!]
+			\includegraphics[width=\linewidth]{task-4-apache-config}
+			\caption{The configuration for our Apache \texttt{VirtualHost}.}
+		\end{figure}
+	
+		\begin{figure}[h!]
+			\includegraphics[width=\linewidth]{task-4-web}
+			\caption{The \texttt{SEEDPKILab2018.com} site being served over HTTPS using a proper SSL certificate.}
+		\end{figure}
+	
+	\section*{Task 5}
+		\subsection*{Step 1}
+			In our attack we will target \texttt{facebook.com}. For this step, we can
+			use our Apache configuration from the previous task but replace the \texttt{ServerName}.
+			
+			\begin{figure}[h!]
+				\includegraphics[width=\linewidth]{task-5-1}
+				\caption{Apache configuration to serve a fake Facebook site.}
+			\end{figure}
+		
+		\subsection*{Step 2}
+			We can then simulate the result of a DNS attack by directly editing our \texttt{/etc/hosts} file to point Facebook to our VM using the following line:
+			
+			\begin{verbatim}
+				127.0.0.1       facebook.com
+			\end{verbatim}
+			
+		\subsection*{Step 3}
+			When we visit \texttt{https://facebook.com} in our browser, we encounter a certificate error because we attempted to use a certificate that is not valid for the domain \texttt{facebook.com}.
+			
+			\begin{figure}[h!]
+				\includegraphics[width=\linewidth]{task-5-3}
+				\caption{The error displayed when we try to redirect users to our attack site using in invalid certificate.}
+			\end{figure}
+		
+	\pagebreak
+		
+	\section*{Task 6}
+		If the CA's root certificate is compromised, we can attack any party that trusts the compromised CA. By going through the steps from the tasks above, we can generate a fake private key for Facebook, create a CSR using that key, and then sign the CSR with the compromised CA certificate to create a valid certificate for \texttt{facebook.com}.
+		
+		To generate our own private key for Facebook, we can use the command:
+		
+		\begin{verbatim}
+			openssl genrsa -aes128 -out facebook.key 1024
+		\end{verbatim}
+	
+		We can then generate a Certificate Signing Request using our fake private key:
+		
+		\begin{verbatim}
+			openssl req -new -key facebook.key -out facebook.csr -config openssl.cnf
+		\end{verbatim}
+		
+		Now we can sign that CSR using the compromised CA key:
+		
+		\begin{verbatim}
+			openssl ca -in facebook.csr -out facebook.crt -cert ca.crt -keyfile ca.key \
+			    -config openssl.cnf
+		\end{verbatim}
+		
+		Finally we can modify the Apache configuration for our Facebook clone to include the certificate that is now signed by a valid (but compromised) CA.
+		
+		\begin{figure}[h!]
+			\includegraphics[width=\linewidth]{task-6-apache}
+			\caption{The Apache configuration for our Facebook clone that now has a valid SSL certificate.}
+		\end{figure}
+	
+		\begin{figure}[h!]
+			\includegraphics[width=\linewidth]{task-6}
+			\caption{With a compromised CA, we can now create certificates for our highly realistic fake Facebook website.}
+		\end{figure}
+		
+\end{document}
