@@ -14,13 +14,6 @@
 \definecolor{diffincl}{named}{Green}
 \definecolor{diffrem}{named}{OrangeRed}
 
-\lstdefinelanguage{diff}{
-	basicstyle=\ttfamily\small,
-	morecomment=[f][\color{diffstart}]{@@},
-	morecomment=[f][\color{diffincl}]{+},
-	morecomment=[f][\color{diffrem}]{-},
-}
-
 \lstset{frame=tb,
 	language=html,
 	aboveskip=3mm,
@@ -72,5 +65,38 @@
 			\caption{The \texttt{ufw} rules for task 1.}
 			\label{fig:task-1-ufw-rules}
 		\end{figure}
+	
+	\section*{Task 2}
+		In addition to the filters from the first task, we also implemented the following rules:
+		
+		\begin{enumerate}
+			\item Block access to \texttt{syr.edu} from A
+			\item Block SSH access from B to A
+		\end{enumerate}
+	
+		Given the template for our firewall LKM from the lab instructions, we can add the following code to the pre or post routing hook to extract some useful information about each incoming or outgoing packet.
+	
+		\begin{lstlisting}[caption={Extracting info from packets.}, language=c]
+struct iphdr *packet_header = (struct iphdr*) sk_network_header(skb);
+
+if (ip_header->protocol == TCP_PROTO) {
+	struct tcphdr *tcp_header = (struct tcphdr*) skb_transport_header(skb);
+	
+	unsigned int src_ip = (unsigned int) ip_header->saddr;
+	unsigned int src_port = (unsigned int) ntohs(tcp_header->source);
+	unsigned int dest_ip = (unsigned int) ip_header->daddr;
+	unsigned int dest_port = (unsigned int) ntohs(tcp_header->dest);
+}
+		\end{lstlisting}
+		
+		Now that we have this information, it is fairly trivial to drop packets that meet specific criteria. For example, to implement the dropping of inbound telnet packets from machine B to machine A, we would add the following code to the hook for \texttt{NF\_INET\_PRE\_ROUTING}:
+		
+		\begin{lstlisting}[caption={Blocking telnet traffic from machine B to machine A}]
+if (src_ip == MACHINE_B_IP) && dest_port == TELNET_PORT) {
+	return NF_DROP;
+}
+		\end{lstlisting}
+		
+		All the implemented rules are variations of the above code sample that inspect various combinations of the source and destination IP address and port.
 		
 \end{document}
