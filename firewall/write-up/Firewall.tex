@@ -39,7 +39,7 @@
 	\vspace{.5in}
 	
 	\section*{Prerequisites}
-		In order to demonstrate the effect of firewalls, we first had to set up two virtual machines (VMs) on the same network. To prove that the two machines can exchange traffic, we can show the result of pinging one machine from another.
+		In order to demonstrate the effect of firewalls, we first had to set up two virtual machines (VMs) on the same network. To prove that the two machines can exchange traffic, we can ping one machine from another.
 		
 		\begin{figure}[h]
 			\begin{center}
@@ -66,6 +66,8 @@
 			\label{fig:task-1-ufw-rules}
 		\end{figure}
 	
+		In order to block traffic to \texttt{example.com} we must have an IP address to block. We can find that using the command \texttt{dig A example.com}.
+	
 	\section*{Task 2}
 		In addition to the filters from the first task, we also implemented the following rules:
 		
@@ -79,6 +81,7 @@
 		\begin{lstlisting}[caption={Extracting info from packets.}, language=c]
 struct iphdr *packet_header = (struct iphdr*) sk_network_header(skb);
 
+// Our rules only apply to traffic over TCP.
 if (ip_header->protocol == TCP_PROTO) {
 	struct tcphdr *tcp_header = (struct tcphdr*) skb_transport_header(skb);
 	
@@ -99,4 +102,29 @@ if (src_ip == MACHINE_B_IP) && dest_port == TELNET_PORT) {
 		
 		All the implemented rules are variations of the above code sample that inspect various combinations of the source and destination IP address and port.
 		
+	\section*{Task 3}
+		The \texttt{ufw} rules for this task are show in Figure \ref{fig:task-3-ufw-rules}. They block any outgoing telnet connections from Machine A and any connections to Facebook from Machine A.
+		
+		\begin{figure}
+			\begin{center}
+				\includegraphics[width=\linewidth]{task-3-ufw-rules}
+			\end{center}
+			\caption{The \texttt{ufw} rules used to enable the filtering for Task 3}
+			\label{fig:task-3-ufw-rules}
+		\end{figure}
+	
+		\subsection*{Task 3.a}
+			Assuming Machine B has the IP \texttt{10.0.2.5}, we can SSH tunnel into Machine B with:
+			
+			\begin{verbatim}
+				ssh -L 8000:10.0.2.5:23 seed@10.0.2.5
+			\end{verbatim}
+			
+			From this session, we can now telnet into Machine B on the tunnel we just opened using:
+			
+			\begin{verbatim}
+				telnet localhost 8000
+			\end{verbatim}
+			
+			This bypasses the filters set on Machine A because the packets are actually first being sent through an encrypted SSH connection to Machine B before being routed to their final destination. Since there is no rule against SSH traffic, this allows us to send/receive any network traffic permitted by Machine B from Machine A.
 \end{document}
