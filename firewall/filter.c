@@ -19,17 +19,17 @@
 static struct nf_hook_ops incoming_hook;
 static struct nf_hook_ops outgoing_hook;
 
-// Hook function
+/* Hook to process incoming traffic. */
 unsigned int pre_routing_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
-    struct iphdr *ip_header = (struct iphdr*)skb_network_header(skb);
-    unsigned int src_ip = (unsigned int)ip_header->saddr;
-    unsigned int dest_ip = (unsigned int)ip_header->daddr;
+    struct iphdr *ip_header = (struct iphdr*) skb_network_header(skb);
+    unsigned int src_ip = (unsigned int) ip_header->saddr;
+    unsigned int dest_ip = (unsigned int) ip_header->daddr;
 
     // If it's a TCP request:
-    if (ip_header->protocol==TCP_PROTO) {
-    	struct tcphdr *tcp_header = (struct tcphdr*)skb_transport_header(skb);
-    	unsigned int src_port = (unsigned int)ntohs(tcp_header->source);
-    	unsigned int dest_port = (unsigned int)ntohs(tcp_header->dest);
+    if (ip_header->protocol == TCP_PROTO) {
+    	struct tcphdr *tcp_header = (struct tcphdr*) skb_transport_header(skb);
+    	unsigned int src_port = (unsigned int) ntohs(tcp_header->source);
+    	unsigned int dest_port = (unsigned int) ntohs(tcp_header->dest);
 
         // Block incoming telnet from Machine B
     	if (src_ip == in_aton(MACHINE_B) && dest_port == TELNET_PORT) {
@@ -50,6 +50,7 @@ unsigned int pre_routing_hook(void *priv, struct sk_buff *skb, const struct nf_h
     return NF_ACCEPT;
 }
 
+/* Hook to process outgoing traffic. */
 unsigned int post_routing_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
     struct iphdr *ip_header = (struct iphdr*)skb_network_header(skb);
 
@@ -87,8 +88,6 @@ unsigned int post_routing_hook(void *priv, struct sk_buff *skb, const struct nf_
 // Initialization
 int init_module() {
     printk(KERN_INFO "Loading custom filter module...\n");
-    unsigned int machine_b_ip = in_aton(MACHINE_B);
-    printk(KERN_DEBUG "Machine B IP: %pI4\n", &machine_b_ip);
 
     // Fill in incoming hook structure
     incoming_hook.hook = pre_routing_hook;
@@ -98,6 +97,7 @@ int init_module() {
 
     nf_register_hook(&incoming_hook);
 
+    // Fill in outgoing hook structure
     outgoing_hook.hook = post_routing_hook;
     outgoing_hook.hooknum = NF_INET_POST_ROUTING;
     outgoing_hook.pf = PF_INET;
