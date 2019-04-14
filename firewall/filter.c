@@ -11,7 +11,6 @@
 #define MACHINE_B "10.0.2.6"
 #define SSH_PORT 22
 #define SYR_IP "128.230.18.198"
-#define TCP_PROTO 6
 #define TELNET_PORT 23
 
 
@@ -26,7 +25,7 @@ unsigned int pre_routing_hook(void *priv, struct sk_buff *skb, const struct nf_h
     unsigned int dest_ip = (unsigned int) ip_header->daddr;
 
     // If it's a TCP request:
-    if (ip_header->protocol == TCP_PROTO) {
+    if (ip_header->protocol == IPPROTO_TCP) {
     	struct tcphdr *tcp_header = (struct tcphdr*) skb_transport_header(skb);
     	unsigned int src_port = (unsigned int) ntohs(tcp_header->source);
     	unsigned int dest_port = (unsigned int) ntohs(tcp_header->dest);
@@ -55,7 +54,7 @@ unsigned int post_routing_hook(void *priv, struct sk_buff *skb, const struct nf_
     struct iphdr *ip_header = (struct iphdr*)skb_network_header(skb);
 
     // We only care about TCP requests
-    if (ip_header->protocol == TCP_PROTO) {
+    if (ip_header->protocol == IPPROTO_TCP) {
         struct tcphdr *tcp_header = (struct tcphdr*) skb_transport_header(skb);
         unsigned int dest_ip = (unsigned int) ip_header->daddr;
         unsigned int dest_port = (unsigned int) ntohs(tcp_header->dest);
