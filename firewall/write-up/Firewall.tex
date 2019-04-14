@@ -81,7 +81,7 @@
 		\begin{lstlisting}[caption={Extracting info from packets.}, language=c]
 struct iphdr *packet_header = (struct iphdr*) sk_network_header(skb);
 
-// Our rules only apply to traffic over TCP.
+// Our rules only apply to traffic using TCP.
 if (ip_header->protocol == TCP_PROTO) {
 	struct tcphdr *tcp_header = (struct tcphdr*) skb_transport_header(skb);
 	
@@ -127,4 +127,33 @@ if (src_ip == MACHINE_B_IP) && dest_port == TELNET_PORT) {
 			\end{verbatim}
 			
 			This bypasses the filters set on Machine A because the packets are actually first being sent through an encrypted SSH connection to Machine B before being routed to their final destination. Since there is no rule against SSH traffic, this allows us to send/receive any network traffic permitted by Machine B from Machine A.
+			
+	\section*{Task 4}
+		As stated in the lab description, Machine B cannot access the web server or create an SSH connection to Machine A. The set of rules that accomplish that are shown in Figure \ref{fig:task-4-ufw-rules}. In this specific scenario, Machine A has the IP address \texttt{10.0.2.5} and Machine B has the IP address {10.0.2.6}.
+		
+		\begin{figure}[h]
+			\begin{center}
+				\includegraphics[width=\linewidth]{task-4-ufw-rules}
+			\end{center}
+			\caption{The \texttt{ufw} rules for task 4.}
+			\label{fig:task-4-ufw-rules}
+		\end{figure}
+	
+		In order to get around this ingress filtering, we can establish a reverse SSH tunnel from Machine A to Machine B that can grants Machine B access to the web server running on Machine A.
+		
+		\begin{verbatim}
+			ssh -R 8080:localhost:80 seed@10.0.2.6
+		\end{verbatim}
+		
+		The above command creates a tunnel on Machine B (\texttt{10.0.2.6}) accessible over port \texttt{8080} that forwards traffic to port \texttt{80} on Machine A (\texttt{localhost}).
+		
+		We can now visit \texttt{http://localhost:8080} in the browser from Machine B as seen in Figure \ref{fig:task-4-web-access}.
+		
+		\begin{figure}[h]
+			\begin{center}
+				\includegraphics[width=4in]{task-4-web-access}
+			\end{center}
+			\caption{Accessing a web page through an SSH tunnel.}
+			\label{fig:task-4-web-access}
+		\end{figure}
 \end{document}
