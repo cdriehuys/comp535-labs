@@ -7,6 +7,8 @@
 \usepackage{graphicx}
 \usepackage[left=0.79in, right=0.79in, top=0.79in, bottom=0.79in]{geometry}
 \usepackage{listings}
+\usepackage{parskip}
+\usepackage{subcaption}
 \usepackage[svgnames]{xcolor}
 \author{Chathan Driehuys}
 
@@ -66,7 +68,49 @@
 			\label{fig:task-1-ufw-rules}
 		\end{figure}
 	
-		In order to block traffic to \texttt{example.com} we must have an IP address to block. We can find that using the command \texttt{dig A example.com}.
+		In order to block traffic to \texttt{example.com} we must have an IP address to block. We can find that using the command \texttt{dig A example.com}. For images that show the result of adding the preceding rules, see Figures \ref{fig:task-1-telnet-a-b}, \ref{fig:task-1-telnet-b-a}, and \ref{fig:task-1-example-com}.
+		
+		\begin{figure}[p]
+			\centering
+			\begin{subfigure}{.5\linewidth}
+				\centering
+				\includegraphics[width=.95\linewidth]{task-1-a-b-telnet-working}
+			\end{subfigure}%
+			\begin{subfigure}{.5\linewidth}
+				\centering
+				\includegraphics[width=.95\linewidth]{task-1-a-b-telnet-blocked}
+			\end{subfigure}
+			\caption{The Telnet connection from A to B that was previously working is now blocked.}
+			\label{fig:task-1-telnet-a-b}
+		\end{figure}
+	
+		\begin{figure}[p]
+			\centering
+			\begin{subfigure}{.5\linewidth}
+				\centering
+				\includegraphics[width=.95\linewidth]{task-1-b-a-telnet-working}
+			\end{subfigure}%
+			\begin{subfigure}{.5\linewidth}
+				\centering
+				\includegraphics[width=.95\linewidth]{task-1-b-a-telnet-blocked}
+			\end{subfigure}
+			\caption{The Telnet connection from B to A that was previously working is now blocked.}
+			\label{fig:task-1-telnet-b-a}
+		\end{figure}
+	
+		\begin{figure}[p]
+			\centering
+			\begin{subfigure}{.5\linewidth}
+				\centering
+				\includegraphics[width=.95\linewidth]{task-1-example-com-working}
+			\end{subfigure}%
+			\begin{subfigure}{.5\linewidth}
+				\centering
+				\includegraphics[width=.95\linewidth]{task-1-example-com-blocked}
+			\end{subfigure}
+			\caption{Access to \texttt{example.com} that was previously working is now blocked.}
+			\label{fig:task-1-example-com}
+		\end{figure}
 	
 	\section*{Task 2}
 		In addition to the filters from the first task, we also implemented the following rules:
@@ -100,7 +144,30 @@ if (src_ip == MACHINE_B_IP) && dest_port == TELNET_PORT) {
 }
 		\end{lstlisting}
 		
-		All the implemented rules are variations of the above code sample that inspect various combinations of the source and destination IP address and port.
+		All the implemented rules are variations of the above code sample that inspect various combinations of the source and destination IP address and port. For images showing the result of our firewall, see Figure~\ref{fig:task-2-results}.
+		
+		\begin{figure}[p]
+			\begin{subfigure}{\linewidth}
+				\centering
+				\includegraphics[width=4in]{task-2-ssh-timeout}
+				\caption{An SSH connection from Machine B to Machine A timing out.}
+				\label{fig:task-2-ssh-timeout}
+			\end{subfigure}
+		
+			\vspace{.25in}
+			
+			\begin{subfigure}{\linewidth}
+				\centering
+				\includegraphics[width=\linewidth]{task-2-websites-blocked}
+				\caption{Examples of blocked websites not loading.}
+				\label{fig:task-2-websites-blocked}
+			\end{subfigure}
+		
+			\caption{The result of our custom firewall}
+			\label{fig:task-2-results}
+		\end{figure}
+	
+	\pagebreak
 		
 	\section*{Task 3}
 		The \texttt{ufw} rules for this task are show in Figure \ref{fig:task-3-ufw-rules}. They block any outgoing telnet connections from Machine A and any connections to Facebook from Machine A.
@@ -126,7 +193,16 @@ if (src_ip == MACHINE_B_IP) && dest_port == TELNET_PORT) {
 				telnet localhost 8000
 			\end{verbatim}
 			
-			This bypasses the filters set on Machine A because the packets are actually first being sent through an encrypted SSH connection to Machine B before being routed to their final destination. Since there is no rule against SSH traffic, this allows us to send/receive any network traffic permitted by Machine B from Machine A.
+			This bypasses the filters set on Machine A because the packets are actually first being sent through an encrypted SSH connection to Machine B before being routed to their final destination. Since the firewall on Machine A has no rule prohibiting SSH traffic, this connection is allowed.
+			
+			Inspecting the packets that are being sent in this scenario reveals that the headers are consistent with a typical SSH connection. This is important because most firewalls use these headers to perform their filtering. Even if the firewall was inspecting the data within each packet (which is very performance intensive) it would not be able to detect anything since SSH traffic is encrypted.
+			
+		\subsection*{Task 3.b}
+			After we set up the tunnel, we can connect to Facebook. Breaking the SSH tunnel and reloading Facebook fails with an error message that the socket is not accepting connections. If we disable the socket in Firefox, we now get an eternal loading page when attempting to navigate to Facebook because all the packets are being dropped. Enabling the socket again causes Facebook to load correctly.
+			
+			Similarly to the previous task, this works because the traffic leaving Machine A does not appear to the firewall to be destined for Facebook, which is blocked, but rather for Machine B over port 22. Once it has reached Machine B, the traffic is then routed to its actual destination of Facebook which is successful because Machine B has no firewall restrictions. The traffic returning from Facebook to Machine A is also not detected (or detectable) because the packets first return to Machine B and then travel back to Machine A through the SSH tunnel which is indistinguishable from any other (legitimate) SSH connection.
+			
+			Inspecting the packets that are being sent in this scenario reveals that the headers are consistent with a typical SSH connection. This is important because most firewalls use these headers to perform their filtering. Even if the firewall was inspecting the data within each packet (which is very performance intensive) it would not be able to detect anything since SSH traffic is encrypted.
 			
 	\section*{Task 4}
 		As stated in the lab description, Machine B cannot access the web server or create an SSH connection to Machine A. The set of rules that accomplish that are shown in Figure \ref{fig:task-4-ufw-rules}. In this specific scenario, Machine A has the IP address \texttt{10.0.2.5} and Machine B has the IP address {10.0.2.6}.
@@ -147,7 +223,7 @@ if (src_ip == MACHINE_B_IP) && dest_port == TELNET_PORT) {
 		
 		The above command creates a tunnel on Machine B (\texttt{10.0.2.6}) accessible over port \texttt{8080} that forwards traffic to port \texttt{80} on Machine A (\texttt{localhost}).
 		
-		We can now visit \texttt{http://localhost:8080} in the browser from Machine B as seen in Figure \ref{fig:task-4-web-access}.
+		We can now visit \texttt{http://localhost:8080} in a browser on Machine B as seen in Figure~\ref{fig:task-4-web-access}.
 		
 		\begin{figure}[h]
 			\begin{center}
